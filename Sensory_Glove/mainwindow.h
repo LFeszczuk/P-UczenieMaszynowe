@@ -4,8 +4,13 @@
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QtCore/QTimer>
+#include <QTimer>
 #include <QElapsedTimer>
 #include <QRandomGenerator>
+#include <QFile>
+#include <QFileDialog>
+#include <QTextStream>
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,7 +23,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-QString Data;
+
 private slots:
     void on_szukaj_clicked();
 
@@ -28,7 +33,13 @@ private slots:
 
     void readFromPort();
 
-    void realtimeDataSlot();
+    void on_Rozpocznij_clicked();
+
+    void on_lineEdit_textEdited(const QString &arg1);
+
+    void on_ActPB_valueChanged();
+
+    void on_Zakoncz_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -39,7 +50,18 @@ private:
 
     QTimer dataTimer;
 
+    QTimer *timer;
+
+    bool Active=1;
+
+    QString Data;
+
     double Value[16];
+
+
+    QString currentFile = "";
+
+
 
 };
 #endif // MAINWINDOW_H
