@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     {
         widgets[i]->addGraph(); // red line
         widgets[i]->graph(0)->setPen(QPen(QColor(255, 110, 40)));
-        qDebug()<<widgets[i];
+        //qDebug()<<widgets[i];
 
     }
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
@@ -34,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent)
         connect(widgets[i]->xAxis, SIGNAL(rangeChanged(QCPRange)), widgets[i]->xAxis2, SLOT(setRange(QCPRange)));
         connect(widgets[i]->yAxis, SIGNAL(rangeChanged(QCPRange)), widgets[i]->yAxis2, SLOT(setRange(QCPRange)));
     }
+
+
 
 
 }
@@ -73,6 +75,11 @@ void MainWindow::on_polacz_clicked()
         this->device->setParity(QSerialPort::NoParity);
         this->device->setStopBits(QSerialPort::OneStop);
         this->device->setFlowControl(QSerialPort::NoFlowControl);
+
+
+
+
+
         connect(this->device, SIGNAL(readyRead()), this, SLOT(readFromPort()));
         qDebug() <<"Otwarto port szeregowy.";
     } else {
@@ -92,32 +99,54 @@ void MainWindow::on_roalacz_clicked()
 }
 
 void MainWindow::readFromPort() {
+
+
     QList<QCustomPlot *> widgets = this->findChildren<QCustomPlot *>();
+    qDebug() <<currentFile;
+    QString fileName =currentFile;
+    QFile file(fileName);
+
+    if(!file.open(QIODevice::Append)){
+        QMessageBox::warning(this,"Warning","Warning cant save file: "+file.errorString());
+        return;
+    }
+    setWindowTitle(fileName);
+
+    QDataStream out(&file);
+
     while(this->device->canReadLine()) {
 
         static QTime time(QTime::currentTime());
-
-        QByteArray data_in = this->device->readAll();
-
+        QByteArray data_in = this->device->readLine();
         double key = time.elapsed()/1000.0;
         static double lastPointKey = 0;
+        QStringList dataBlock;
+
+
 
         charBuffer.append(data_in);
-        //qDebug()<<charBuffer;
+        qDebug()<<charBuffer;
+        QStringList List;
         if (data_in.contains("\n")) {
             QString myString(charBuffer);
             if(myString.startsWith("P")){
                 Data=myString;
-
-                QStringList List=Data.split('-');
-
+                List=Data.split('-');
                 for(int i=1;i<List.size()-1;i++)
                 {
-                    Value[i-1]=List[i].toDouble();
-                   // qDebug()<<Value[i-1];
-                }
-            }
 
+                    Value[i-1]=List[i].toDouble();
+                    qDebug()<<Value[i-1];
+                    out<<List[i];
+                    if(i==16)
+                    {
+                        out<<"\n";
+                    }
+                }
+
+                List.clear();
+                Data.clear();
+            }
 
 
             if (key-lastPointKey > 0.002) // at most add point every 2 ms
@@ -133,25 +162,71 @@ void MainWindow::readFromPort() {
                 widgets[i]->xAxis->setRange(key, 8, Qt::AlignRight);
                 widgets[i]->replot();
             }
-            // calculate frames per second:
-            static double lastFpsKey;
-            static int frameCount;
-            ++frameCount;
-            if (key-lastFpsKey > 2) // average fps over 2 seconds
-            {
-                lastFpsKey = key;
-                frameCount = 0;
-            }
-
-
             charBuffer = "";
+
         }
+
     }
+
 }
 
-void MainWindow::realtimeDataSlot()
+
+
+
+
+
+void MainWindow::on_Rozpocznij_clicked()
 {
 
+
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this,SLOT(on_ActPB_valueChanged()) );
+    timer->start(100);
+    //    qDebug() <<currentFile;
+    //    QString fileName =currentFile;
+
+    //    QFile file(fileName);
+    //    if(!file.open(QFile::WriteOnly | QFile::Text)){
+    //        QMessageBox::warning(this,"Warning","Warning cant save file: "+file.errorString());
+    //        return;
+    //    }
+
+    //    //    currentFile=fileName;
+    //    setWindowTitle(fileName);
+    //    QTextStream out(&file);
+    //    //    QString text=ui->textEdit->toPlainText();
+    //    //    out<<text;
+    //    file.close();
+}
+
+
+void MainWindow::on_Zakoncz_clicked()
+{
+    Active=0;
+}
+
+
+void MainWindow::on_lineEdit_textEdited(const QString &arg1)
+{
+    currentFile=arg1;
+}
+
+
+
+void MainWindow::on_ActPB_valueChanged()
+{
+    static QTime time(QTime::currentTime());
+    double key = time.elapsed();
+    static double lastPointKey = 0;
+    double reset;
+    reset=key-lastPointKey;
+    if(reset>=4970)
+    {
+        ui->ActPB->reset();
+        lastPointKey = key;
+    }
+    ui->ActPB->setValue(reset);
+    qDebug()<<reset;
 
 }
 
