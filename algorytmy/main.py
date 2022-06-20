@@ -159,12 +159,12 @@ def main():
     hist_drawing(df)
     y = df["gesture_id"]
     x = df.drop(columns=["gesture_id"])
-    x = x.to_numpy()
+    # x = x.to_numpy()
     # draw_learn(x,y)
-    # X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=42)
-    # grr = pd.plotting.scatter_matrix(X_train[:20], c=y_train[:20], figsize=(15, 15), marker='o',
-    #                                  hist_kwds={'bins': 20},
-    #                                  s=60, alpha=0.8, cmap=mglearn.cm3)
+    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=42)
+    grr = pd.plotting.scatter_matrix(X_train[:20], c=y_train[:20], figsize=(15, 15), marker='o',
+                                     hist_kwds={'bins': 20},
+                                     s=60, alpha=0.8, cmap=mglearn.cm3)
 
     # for i in [1,3,9]:
     #     print("################# Wynik dla {} sąsiada".format(i))
@@ -173,7 +173,7 @@ def main():
     # mlp_func(x,y)
     # mlp_func(X_pca,y)
     # svm_func(x,y)
-    svm_func(X_pca,y)
+    # svm_func(X_pca,y)
 
 
 
